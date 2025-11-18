@@ -12,11 +12,17 @@ def extract_linkedin_urls(query, name, company, designation):
     If name is not provided, returns multiple profiles for the role at the company
     """
     serpapi_key = os.getenv('SERPAPI_KEY')
+    demo_mode = os.getenv('DEMO_MODE', 'false').lower() == 'true'
     
     all_urls = []
     best_url = None
     confidence_score = 0.0
     linkedin_urls = []  # Initialize here to avoid scope issues
+    
+    # Demo mode for testing without API
+    if demo_mode:
+        print("Running in DEMO MODE", file=sys.stderr)
+        return generate_demo_results(query, name, company, designation)
     
     try:
         if serpapi_key:
@@ -96,3 +102,46 @@ def calculate_confidence(url, name, company, designation):
     score = min(score, 1.0)
     
     return round(score, 2)
+
+def generate_demo_results(query, name, company, designation):
+    """
+    Generate demo results for testing without API access
+    """
+    print(f"Generating demo results for: {name or 'Multiple people'} at {company}", file=sys.stderr)
+    
+    # Generate realistic-looking LinkedIn URLs
+    if name and name.strip():
+        # Name-based search
+        name_slug = name.lower().replace(' ', '-')
+        linkedin_urls = [
+            f"https://www.linkedin.com/in/{name_slug}",
+            f"https://www.linkedin.com/in/{name_slug}-{company.lower()}",
+            f"https://www.linkedin.com/in/{name_slug}-profile",
+        ]
+        confidence_score = 0.85
+        search_type = "name_based"
+    else:
+        # Role-based search - generate multiple profiles
+        designation_slug = designation.lower().replace(' ', '-')
+        company_slug = company.lower().replace(' ', '')
+        linkedin_urls = [
+            f"https://www.linkedin.com/in/{designation_slug}-{company_slug}-1",
+            f"https://www.linkedin.com/in/{designation_slug}-{company_slug}-2",
+            f"https://www.linkedin.com/in/{designation_slug}-{company_slug}-3",
+            f"https://www.linkedin.com/in/{designation_slug}-{company_slug}-4",
+            f"https://www.linkedin.com/in/{designation_slug}-{company_slug}-5",
+            f"https://www.linkedin.com/in/{designation_slug}-{company_slug}-6",
+            f"https://www.linkedin.com/in/{designation_slug}-{company_slug}-7",
+            f"https://www.linkedin.com/in/{designation_slug}-{company_slug}-8",
+        ]
+        confidence_score = 0.7
+        search_type = "role_based"
+    
+    return {
+        "generated_query": query,
+        "linkedin_url": linkedin_urls[0] if linkedin_urls else None,
+        "all_urls": linkedin_urls,
+        "confidence_score": confidence_score,
+        "search_type": search_type,
+        "demo_mode": True
+    }
